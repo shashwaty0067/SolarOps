@@ -1,119 +1,221 @@
-# SolarOps — Digital Solar Management System
+# ☀️ SolarOps — Digital Solar Management System
 
-A digital backbone built with **React + Vite** and **Supabase PostgreSQL** for rooftop solar companies (inspired by SunPower Solutions), solving operational headaches from the first quote request to the 20-year warranty.
+**SolarOps** is an enterprise-grade digital operating backbone built for Solar EPC (Engineering, Procurement, and Construction) companies and rooftop solar installers. Built with **React 18 + Vite** and powered by **Supabase PostgreSQL**, SolarOps replaces disconnected spreadsheets, WhatsApp groups, and paper sign-offs with an end-to-end digital workflow — from customer inquiry and rooftop feasibility survey to inventory dispatch, digital sign-off, warranty tracking, and real-time job profitability.
 
 ---
 
-## 🏛️ Project Architecture
+## 📑 Table of Contents
 
-The application strictly reflects the system architecture specification:
+- [System Architecture](#-system-architecture)
+- [Key Portals & Capabilities](#-key-portals--capabilities)
+- [Real-World Operational Workflows](#-real-world-operational-workflows)
+- [Database Schema & Architecture](#-database-schema--architecture)
+- [Demo Data & Seeder Utility](#-demo-data--seeder-utility)
+- [Environment Setup & Installation](#-environment-setup--installation)
+- [Deployment on Vercel](#-deployment-on-vercel)
+- [Tech Stack](#-tech-stack)
+
+---
+
+## 🏛️ System Architecture
 
 ```
                                   PUBLIC WEBSITE
-                       (Anyone can visit without logging in)
-         Solar products • Services • Packages • Contact • Request a quote
+                       (Accessible to all visitors & leads)
+        Solar Packages • Savings Calculator • Track by Phone • Quote Request
                                         │
-                                 Login / Sign up
-                        ┌───────────────┴───────────────┐
-                        ▼                               ▼
-                 Customer Portal                 Admin Dashboard
-                  (User login)                    (Admin login)
-            Customers manage their           Company controls the
-             own solar journey:                entire operation:
-            • My enquiries                   • Customer management
-            • My quotations                  • Site surveys
-            • My orders                      • Quotations
-            • Installation status            • Inventory
-            • Warranty                       • Orders
-            • Service requests               • Installations
-            • Profile                        • Warranty
-                                             • Finance
-                                             • Reports
+                         Authentication & Role Routing
+                        ┌───────────────┼───────────────┐
+                        ▼               ▼               ▼
+                 CUSTOMER PORTAL  TECHNICIAN PORTAL ADMIN DASHBOARD
+                 (Customer Role)  (Field Staff Role) (Admin/Executive)
+                 ───────────────  ───────────────── ───────────────
+                 • My Inquiries   • Assigned Feas.  • Lead Pipeline
+                 • My Quotations    Surveys         • Survey Approvals
+                 • Order Tracking • Field Handover  • Dynamic BOM & Quote
+                 • Dispatch Items • On-Screen Sign- • Live Warehouse &
+                 • Warranties       off with Pad      Serial Dispatch
+                 • Service / Help • Breakdown Serv. • Technician Roster
+                   Tickets          Tickets         • Orders & Payments
+                                                    • Warranty Master
+                                                    • Job Profitability
                         └───────────────┬───────────────┘
                                         ▼
-                                 Supabase Backend
-               (Authentication + PostgreSQL + Storage + Row Level Security)
+                                SUPABASE BACKEND
+          (PostgreSQL Database • Row Level Security • REST API • Auth)
 ```
 
 ---
 
-## ⚡ Problem Statement Real-World Flows Implemented
+## 🌟 Key Portals & Capabilities
 
-1. **Scene 1: The Rooftop Inquiry**
-   - Web enquiry captures name, phone, address, shadow-free roof area, and monthly power bill.
-   - Engineering desk assigns 1 of 15 technicians.
-   - Field survey records roof direction (azimuth), tilt angle, grid connection (1-phase/3-phase), and cable run distance to main meter.
-   - Quotation creation is safely locked until survey is officially approved.
+### 1. 🌐 Public Website & Lead Capture
+- **Solar Solution Explorer**: Residential, Commercial, and Industrial grid-tie and off-grid packages with PM Surya Ghar subsidy estimations.
+- **Rooftop Calculator**: Recommends system capacity (kW), estimated monthly savings, and roof area requirement based on the customer's power bill.
+- **Track by Phone**: Customers can look up live progress of their application or order simply by entering their registered phone number.
+- **Feasibility Request Modal**: Captures electricity connection category, sanctioned load, monthly bill, and roof type.
 
-2. **Scene 2: Getting the Kit Right**
-   - Standard package templates from **1 kW to 5 kW** (On-Grid with max PM Surya Ghar subsidy & Off-Grid with battery storage).
-   - Automatically populates the exact Bill of Materials (BOM) parts: Tier-1 Mono PERC panels, inverters, elevated galvanized stands, ACDB/DCDB protection boxes, earthing electrodes, and cables so nothing is forgotten.
-   - Advance payment (e.g. 35%) confirmation unlocks warehouse dispatch and crew scheduling.
+### 2. 👤 Customer Self-Service Portal
+- **Quotation Review & BOM Inspection**: View detailed hardware Bill of Materials (BOM) with OEM warranties.
+- **Digital Payment Proof Submission**: Homeowners can submit NEFT/UPI/Bank UTR reference numbers directly from the portal.
+- **Live Milestone Tracker**: Real-time progress bar through Survey → Quote → Payment Confirmed → Warehouse Packing → Truck Dispatched → Installation Scheduled → Grid Net-Meter Commissioned.
+- **Itemized Component Warranties**: View active warranties for each scanned serial number with direct warranty claim / service ticketing.
+- **Breakdown & Troubleshooting Tickets**: Raise complaints specifying exact equipment serial numbers or report inverter fault codes.
 
-3. **Scene 3: Dispatch Day and Serial Numbers**
-   - Staging for ₹1,50,000 worth of inverters and batteries.
-   - Every inverter, battery, and charge controller has its serial number scanned/registered before the truck leaves.
-   - Truck dispatch automatically initiates the warranty clock (2 years for inverters & batteries, 20 years for solar panels).
+### 3. 🛠️ Technician & Field Crew Portal
+- **Feasibility Survey Form**: Record rooftop azimuth direction, tilt angle, shadow-free area (sq.ft), cable run length, and structural integrity directly on mobile/tablet.
+- **Installation Acceptance Handover**: Record tested power generation (kW), earthing resistance (Ohms), and system inspection notes.
+- **Interactive Digital Signature Pad**: Capture the customer's on-screen digital signature at final commissioning.
+- **Payment Collection**: Field technicians can record collected payments on site with immediate company ledger sync.
 
-4. **Scene 4: On the Roof**
-   - 15 field technicians organized across 3 specialized crews (Alpha, Beta, Gamma).
-   - Mobile/tablet friendly handover form: start/finish times, confirmation of system size, tested power generation output, roof photo proof.
-   - **Interactive Digital Signature Pad**: Homeowners sign directly on screen to certify handover acceptance and net-metering commissioning.
-
-5. **Scene 5: The Rainy Season Breakdown**
-   - Instant search bar finds customer and exact inverter serial number in seconds.
-   - Automated warranty validation:
-     - **Under Warranty**: Repair or replacement costs the customer **₹0 (Free)**.
-     - **Expired**: Automated billing generated for parts and technician labour.
-   - Full ticket lifecycle tracking until customer confirms resolution.
-
-6. **Scene 6: The Director's Month-End**
-   - Answers: *Which installations made money? Which lost money?*
-   - Per-job gross margin % and profit calculation (Revenue - Stock Purchase Cost - Technician Wages - Permits/Logistics).
-   - Advance payments collected vs balances due.
-   - Technician payroll ledger.
-   - Government subsidy paperwork tracking (Applied → DISCOM inspection passed → Approved → Disbursed).
-   - Executive print/export report view.
+### 4. 📊 Admin & Executive Dashboard
+- **Feasibility Survey Gate**: Enforces safety policy — quotations remain locked until site survey feasibility is verified and approved.
+- **Dynamic Quotation & BOM Generator**: Generates quotes from pre-configured packages (1 kW to 25 kW) and auto-populates exact components.
+- **Warehouse Staging & Serial Scanner**: Pre-fixes dispatch items based on package BOM, validates warehouse stock availability, and scans unique serial numbers before truck departure.
+- **Direct & UTR Payment Verification**: Admin verifies bank transactions, auto-advances the order status, and generates payment receipts.
+- **Technical Staff & Crew Roster**: Manage 3 field crews (Alpha, Beta, Gamma), assign jobs, monitor safety certifications, and track technician ratings.
+- **Real-Time Job Profitability & Month-End Reports**: Zero hardcoded data — calculates real-time revenue, stock purchase costs, wages, and permits per job to display true gross margin percentages.
 
 ---
 
-## 🗄️ Supabase Backend (PostgreSQL)
+## ⚡ Real-World Operational Workflows
 
-The full PostgreSQL DDL schema with Row Level Security (RLS) is located at:
-📁 `supabase/schema.sql`
+1. **Rooftop Inquiry & Feasibility Check (Scene 1)**:
+   - A homeowner submits a request. The engineering desk assigns a surveyor from the technical crew directory.
+   - The surveyor inspects the roof, records structural integrity, tilt, and azimuth, and approves the feasibility report.
 
-Tables defined:
-- `profiles`
-- `packages` & `bom_templates`
-- `enquiries`
-- `site_surveys`
-- `quotations`
-- `orders`
-- `inventory_items` & `serial_numbers`
-- `installations`
-- `warranties`
-- `service_tickets`
-- `job_profitability`
+2. **Accurate Bill of Materials & Quotation (Scene 2)**:
+   - Quotation generator unlocks only for approved site surveys.
+   - Admin selects package template; system auto-computes subsidies (e.g. PM Surya Ghar Muft Bijli Yojana) and net payable amounts.
+   - Advance payment (e.g. 35%) unlocks order booking.
 
-### Connecting Supabase
-Add your Supabase project credentials in `.env`:
-```env
-VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-```
-*Note: The app also includes an automated offline demo store with local storage persistence, meaning it works 100% out of the box right away even before configuring Supabase.*
+3. **Inventory Staging, Stock Check & Serial Scan (Scene 3)**:
+   - Required items are pre-loaded from BOM. If warehouse stock is low, the system raises an alert.
+   - Every inverter and Tier-1 panel serial number is uniquely scanned and linked to that customer.
+   - Truck dispatch triggers the item's warranty clock starting from the dispatch date.
+
+4. **Rooftop Handover & Digital Acceptance (Scene 4)**:
+   - Field crew mounts the array, grounds the earthing pit (<2.0 Ohms), tests peak kW generation, and syncs the inverter.
+   - Homeowner accepts the installation by signing on the digital canvas right on the technician's tablet.
+
+5. **Rainy Season Breakdowns & Warranty Validation (Scene 5)**:
+   - When a customer calls or raises a ticket, entering their phone or inverter serial immediately pulls up their warranty status.
+   - If under warranty: Repair or replacement is marked at **₹0 (Free)** under OEM guarantee.
+   - If expired: Automated billing is generated for labour and replacement components.
+
+6. **Executive Financials & Month-End Ledger (Scene 6)**:
+   - Real-time financial reports show gross margin % for every individual project:
+     $$\text{Gross Profit} = \text{Revenue Received} - (\text{Stock Cost} + \text{Crew Wages} + \text{Permits/Logistics})$$
+   - Tracks DISCOM inspection status and subsidy disbursement pipelines.
 
 ---
 
-## 🚀 Getting Started
+## 🗄️ Database Schema & Architecture
+
+SolarOps uses a relational PostgreSQL schema in Supabase with foreign keys, indexes, and Row Level Security:
+
+| Table | Description |
+| :--- | :--- |
+| `profiles` | User accounts (Customer, Technician, Admin) with role-based access |
+| `staff` | Technical crew members, license numbers, blood groups, and skills |
+| `packages` | Pre-defined solar system configurations (1 kW – 25 kW) with BOM templates |
+| `enquiries` | Solar leads capturing load, roof area, and DISCOM connection type |
+| `site_surveys` | Rooftop feasibility reports, shadow analysis, tilt, and azimuth |
+| `quotations` | Financial proposals, BOM items, subsidies, and payment milestones |
+| `orders` | Confirmed installations, scheduled dates, and live tracking stages |
+| `inventory_items`| Warehouse inventory items, categories, and stock quantities |
+| `serial_numbers` | Hardware serial numbers uniquely tied to orders and customers |
+| `installations` | Job handovers, generation output tests, and digital signatures |
+| `warranties` | Component-level certificates with start/end dates and coverage terms |
+| `service_tickets`| Troubleshooting tickets, fault codes, assigned technicians, and costs |
+| `job_profitability`| Real-time financial ledger calculating margin % and expenses |
+
+The complete SQL migration and table definitions are available in:
+- `supabase/schema.sql` (Tables, Constraints, Indexes & RLS Policies)
+- `supabase/seed_complete.sql` (Initial relational seeds)
+
+---
+
+## 🧪 Demo Data & Seeder Utility
+
+SolarOps includes an automated node seeder that populates Supabase with over **420+ realistic, interconnected records**:
 
 ```bash
-# Install dependencies
-npm install
+# Seed 420+ demo records across all tables into live Supabase
+node scripts/feedDemoData.js
 
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
+# Audit and verify row counts across all tables
+node scripts/verifyCounts.js
 ```
+
+---
+
+## 🚀 Environment Setup & Installation
+
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- A Supabase project (free tier works great)
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-org/solarops.git
+cd solarops
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+Create a `.env` file in the project root:
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+```
+
+*(You can copy `.env.example` as a template)*
+
+### 4. Run database migrations
+Go to your **Supabase Dashboard → SQL Editor** and execute the contents of:
+- `supabase/schema.sql`
+
+### 5. Start the development server
+```bash
+npm run dev
+```
+
+Visit `http://localhost:5173` in your browser.
+
+---
+
+## 🌐 Deployment on Vercel
+
+SolarOps is pre-configured for seamless zero-config deployment on Vercel:
+
+1. Push your code to GitHub / GitLab / Bitbucket.
+2. In the [Vercel Dashboard](https://vercel.com), click **Add New Project** and select your repository.
+3. Configure project settings:
+   - **Framework Preset**: `Vite`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+4. Add Environment Variables under **Settings → Environment Variables**:
+   - `VITE_SUPABASE_URL` = `https://YOUR_PROJECT_ID.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = `YOUR_SUPABASE_ANON_KEY`
+5. Click **Deploy**.
+
+---
+
+## 🧰 Tech Stack
+
+- **Frontend**: [React 18](https://react.dev/), [Vite](https://vitejs.dev/)
+- **Backend / Database**: [Supabase](https://supabase.com/) (PostgreSQL 15, RLS, Realtime)
+- **State Management**: Reactive in-memory state store with dual-sync (Supabase live DB + offline fallback)
+- **Styling**: Modern responsive CSS with clean flexbox & grid design system
+- **Signing**: HTML5 Canvas digital signature capture for on-site handovers
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the LICENSE file for details.
